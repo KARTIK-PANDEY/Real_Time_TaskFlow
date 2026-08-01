@@ -1,0 +1,293 @@
+"use client";
+
+import { useDashboard } from "../layout";
+import { useState, useMemo } from "react";
+import { Check, CheckCircle2, CircleHelp, Pause, Play, Plus, Search, ChevronDown, CalendarDays } from "lucide-react";
+import type { TaskStatus, TaskView, TaskPriority } from "@/lib/types";
+
+function Avatar({ initials, color, status, size = "md" }: { initials: string; color: string; status?: string; size?: "sm" | "md" | "lg" }) {
+  const sizeClass = size === "sm" ? "avatar-sm" : size === "lg" ? "avatar-lg" : "";
+  return (
+    <div className={`avatar ${sizeClass}`} style={{ backgroundColor: color }}>
+      <span>{initials}</span>
+      {status && <i className={`status-badge is-${status}`} />}
+    </div>
+  );
+}
+
+function dueCopy(value: string) {
+  const due = new Date(value);
+  const today = new Date();
+  const tomorrow = new Date(today);
+  tomorrow.setDate(today.getDate() + 1);
+  const dateKey = due.toDateString();
+  if (dateKey === today.toDateString()) return "Today";
+  if (dateKey === tomorrow.toDateString()) return "Tomorrow";
+  return new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric" }).format(due);
+}
+
+function formatMinutes(minutes: number) {
+  const hours = Math.floor(minutes / 60);
+  const remainder = minutes % 60;
+  if (!hours) return `${remainder}m`;
+  return remainder ? `${hours}h ${remainder}m` : `${hours}h`;
+}
+
+function formatTimer(totalSeconds: number) {
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+  return [hours, minutes, seconds].map((value) => String(value).padStart(2, "0")).join(":");
+}
+
+function TaskRow({
+  task,
+  timer,
+  tick,
+  onStatus,
+  onTimer,
+  disabled = false,
+}: {
+  task: TaskView;
+  timer: any;
+  tick: number;
+  onStatus: (taskId: number, status: string) => void;
+  onTimer: (task: TaskView) => void;
+  disabled?: boolean;
+}) {
+  const isTiming = timer?.taskId === task.id;
+  const elapsedSeconds = isTiming ? Math.floor((tick - timer.startedAt) / 1000) : 0;
+  const displaySeconds = task.trackedMinutes * 60 + elapsedSeconds;
+  const isDueToday = dueCopy(task.dueAt) === "Today";
+
+  const statusCopy: Record<string, string> = {
+    todo: "To do",
+    in_progress: "In progress",
+    review: "In review",
+    completed: "Completed",
+  };
+
+  return (
+    <div className={`task-row ${task.status === "completed" ? "is-completed" : ""}`}>
+      <style jsx>{`
+        .task-row {
+          border-left: 4px solid !important;
+          border-left-color: ${task.priority === "high" ? "#ef4444" : task.priority === "medium" ? "#eab308" : "#22c55e"} !important;
+        }
+        .timer-button.is-disabled {
+          opacity: 0.5;
+          cursor: not-allowed !important;
+          background: rgba(255,255,255,0.03) !important;
+          color: #94a3b8 !important;
+          border: 1px solid rgba(255,255,255,0.05) !important;
+        }
+        .task-check.is-disabled {
+          cursor: not-allowed !important;
+          opacity: 0.6;
+          border-color: rgba(255,255,255,0.15) !important;
+          background: transparent !important;
+        }
+      `}</style>
+
+      <button
+        className={`task-check status-check-${task.status} ${disabled ? "is-disabled" : ""}`}
+        aria-label={task.status === "completed" ? "Reopen task" : "Complete task"}
+        onClick={() => !disabled && onStatus(task.id, task.status === "completed" ? "todo" : "completed")}
+        disabled={disabled}
+      >
+        {task.status === "completed" && <Check size={14} strokeWidth={3} />}
+      </button>
+
+      <div className="task-main">
+        <div className="task-title-line">
+          <strong>{task.title}</strong>
+          <span className={`priority-dot priority-${task.priority}`} title={`${task.priority} priority`} />
+        </div>
+        <div className="task-meta-mobile">
+          <span>{task.project}</span>
+          <span>•</span>
+          <span>{dueCopy(task.dueAt)}</span>
+        </div>
+        <div className="progress-track" aria-label={`${task.progress}% complete`}>
+          <span style={{ width: `${task.progress}%` }} />
+        </div>
+      </div>
+
+      <div className="task-project">
+        <span>{task.project}</span>
+        <small>{task.progress}% complete</small>
+      </div>
+
+      <div className="task-owner">
+        <Avatar
+          initials={task.assignee.initials}
+          color={task.assignee.avatarColor}
+          size="sm"
+          status={task.assignee.status}
+        />
+        <span>{task.assignee.name.split(" ")[0]}</span>
+      </div>
+
+      <div className={`task-date ${isDueToday ? "is-today" : ""}`}>
+        <CalendarDays size={14} />
+        <span>{dueCopy(task.dueAt)}</span>
+      </div>
+
+      <div className="task-status-wrap">
+        <span className={`status-swatch swatch-${task.status}`} />
+        <select
+          value={task.status}
+          onChange={(event) => onStatus(task.id, event.target.value)}
+          aria-label={`Status for ${task.title}`}
+          disabled={disabled}
+          style={disabled ? { cursor: "not-allowed" } : undefined}
+        >
+          {Object.entries(statusCopy).map(([value, label]) => (
+            <option key={value} value={value}>
+              {label}
+            </option>
+          ))}
+        </select>
+        <ChevronDown size={13} />
+      </div>
+
+      <button
+        className={`timer-button ${isTiming ? "is-running" : ""} ${disabled ? "is-disabled" : ""}`}
+        onClick={() => !disabled && onTimer(task)}
+        disabled={disabled}
+        aria-label={isTiming ? `Stop timer for ${task.title}` : `Start timer for ${task.title}`}
+      >
+        {isTiming ? <Pause size={13} fill="currentColor" /> : <Play size={13} fill="currentColor" />}
+        <span>{isTiming ? formatTimer(displaySeconds) : formatMinutes(task.trackedMinutes)}</span>
+      </button>
+    </div>
+  );
+}
+
+export default function TasksPage() {
+  const { data, query, setQuery, updateTaskStatus, handleTimer, timer, tick, setNewTaskOpen, user, isAdmin } = useDashboard();
+  const [filter, setFilter] = useState<string>("all");
+  const [showAllTasks, setShowAllTasks] = useState(isAdmin);
+
+  const taskFilters = [
+    { id: "all", label: "All tasks" },
+    { id: "todo", label: "To do" },
+    { id: "in_progress", label: "In progress" },
+    { id: "review", label: "Review" },
+    { id: "completed", label: "Completed" },
+  ];
+
+  const filteredTasks = useMemo(() => {
+    if (!data || !user) return [];
+    const normalized = query.trim().toLowerCase();
+    return data.tasks.filter((task) => {
+      const matchesScope = showAllTasks || task.assignee.id === user.id;
+      const matchesFilter = filter === "all" || task.status === filter;
+      const matchesQuery =
+        !normalized ||
+        [task.title, task.project, task.assignee.name, task.description].some((value) =>
+          value.toLowerCase().includes(normalized),
+        );
+      return matchesScope && matchesFilter && matchesQuery;
+    });
+  }, [data, filter, query, showAllTasks, user]);
+
+  if (!data || !user) return null;
+
+  return (
+    <>
+      <section className="welcome-row">
+        <div>
+          <h1>{isAdmin ? "Team Tasks" : "My Task Workspace"}</h1>
+          <p>{isAdmin ? "Organize, track, and assign tasks across your workspace." : "Track status, complete assignments, and log your focus time."}</p>
+        </div>
+        {isAdmin && (
+          <button className="primary-button new-task-button" onClick={() => setNewTaskOpen(true)}>
+            <Plus size={18} /> New task <kbd>N</kbd>
+          </button>
+        )}
+      </section>
+
+      <article className="panel tasks-panel">
+        <div className="panel-heading task-heading">
+          <div>
+            <span className="panel-kicker">Work queue</span>
+            <h2>Tasks List <span>{filteredTasks.length}</span></h2>
+          </div>
+        </div>
+        <div className="task-toolbar" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <div className="task-filters">
+            {taskFilters.map((item) => (
+              <button
+                key={item.id}
+                className={filter === item.id ? "active" : ""}
+                onClick={() => setFilter(item.id)}
+              >
+                {item.label}
+              </button>
+            ))}
+          </div>
+
+          {!isAdmin && (
+            <div className="teammate-scope-toggle" style={{ display: "flex", gap: "6px", background: "#f0f0f3", padding: "4px", borderRadius: "8px" }}>
+              <style jsx>{`
+                .scope-btn {
+                  padding: 6px 12px;
+                  border: none;
+                  border-radius: 6px;
+                  font-size: 12px;
+                  font-weight: 600;
+                  cursor: pointer;
+                  transition: all 0.2s;
+                }
+                .scope-btn.active {
+                  background: #6c5edb;
+                  color: white;
+                  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+                }
+                .scope-btn.inactive {
+                  background: transparent;
+                  color: #64748b;
+                }
+              `}</style>
+              <button className={`scope-btn ${!showAllTasks ? "active" : "inactive"}`} onClick={() => setShowAllTasks(false)}>My Tasks</button>
+              <button className={`scope-btn ${showAllTasks ? "active" : "inactive"}`} onClick={() => setShowAllTasks(true)}>All Team Tasks</button>
+            </div>
+          )}
+        </div>
+        
+        <div className="task-table-head">
+          <span>Task</span><span>Project</span><span>Assignee</span><span>Due</span><span>Status</span><span>Tracked</span>
+        </div>
+        
+        <div className="task-list">
+          {filteredTasks.length ? (
+            filteredTasks.map((task) => (
+              <TaskRow
+                key={task.id}
+                task={task}
+                timer={timer}
+                tick={tick}
+                onStatus={updateTaskStatus}
+                onTimer={handleTimer}
+                disabled={!isAdmin && task.assignee.id !== user.id}
+              />
+            ))
+          ) : (
+            <div className="empty-state">
+              <Search size={22} />
+              <strong>No matching tasks</strong>
+              <span>Try a different search or task filter.</span>
+              <button onClick={() => { setQuery(""); setFilter("all"); }}>Clear filters</button>
+            </div>
+          )}
+        </div>
+      </article>
+
+      <footer className="dashboard-footer">
+        <span>Disa Financial workspace · All systems operational</span>
+        <div><button><CircleHelp size={14} /> Help center</button><button>Privacy</button></div>
+      </footer>
+    </>
+  );
+}
