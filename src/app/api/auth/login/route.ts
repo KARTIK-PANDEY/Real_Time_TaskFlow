@@ -1,9 +1,11 @@
 import { db } from "@/db";
 import { employees } from "@/db/schema";
+import { ensureSeedData } from "@/lib/dashboard-data";
 import { eq, or } from "drizzle-orm";
 
 export async function POST(request: Request) {
   try {
+    await ensureSeedData();
     const { email, password } = await request.json();
 
     if (!email || !password) {

@@ -1,5 +1,6 @@
 import { db } from "@/db";
 import { employees } from "@/db/schema";
+import { ensureSeedData } from "@/lib/dashboard-data";
 import { eq, or } from "drizzle-orm";
 
 const AVATAR_COLORS = [
@@ -14,6 +15,7 @@ const AVATAR_COLORS = [
 
 export async function POST(request: Request) {
   try {
+    await ensureSeedData();
     const { name, email, loginId, role, department, password } = await request.json();
 
     if (!name || !email || !role || !department || !password) {
