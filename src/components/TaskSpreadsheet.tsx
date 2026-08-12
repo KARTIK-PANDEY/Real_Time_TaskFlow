@@ -77,10 +77,10 @@ export default function TaskSpreadsheet({
   const handleBulkSave = async () => {
     setError("");
     setSuccess("");
-    
+
     // Filter out rows that have no title
     const activeRows = rows.filter((r) => r.title.trim() !== "");
-    
+
     if (activeRows.length === 0) {
       setError("Please fill in at least one task title before saving.");
       return;
