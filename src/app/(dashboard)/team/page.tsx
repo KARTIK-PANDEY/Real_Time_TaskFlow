@@ -173,32 +173,62 @@ export default function TeamPage() {
               </div>
             </div>
 
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))", gap: "16px", marginTop: "20px" }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))", gap: "20px", marginTop: "20px" }}>
+              <style jsx>{`
+                .team-card {
+                  background: rgba(20, 20, 43, 0.65) !important;
+                  border: 1px solid rgba(255, 255, 255, 0.05) !important;
+                  backdrop-filter: blur(12px) !important;
+                  border-radius: 16px;
+                  padding: 24px;
+                  display: flex;
+                  flex-direction: column;
+                  gap: 16px;
+                  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+                }
+                .team-card:hover {
+                  transform: translateY(-3px);
+                  border-color: rgba(99, 102, 241, 0.35) !important;
+                  box-shadow: 0 12px 30px rgba(99, 102, 241, 0.12) !important;
+                  background: rgba(26, 26, 56, 0.8) !important;
+                }
+                .dept-badge {
+                  padding: 2px 8px;
+                  font-size: 11px;
+                  font-weight: 700;
+                  border-radius: 6px;
+                  text-transform: uppercase;
+                  letter-spacing: 0.5px;
+                }
+              `}</style>
               {filteredMembers.length ? (
                 filteredMembers.map((employee) => (
-                  <div
-                    key={employee.id}
-                    style={{
-                      background: "rgba(255, 255, 255, 0.02)",
-                      border: "1px solid rgba(255, 255, 255, 0.05)",
-                      borderRadius: "16px",
-                      padding: "20px",
-                      display: "flex",
-                      flexDirection: "column",
-                      gap: "14px"
-                    }}
-                  >
-                    <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                      <Avatar initials={employee.initials} color={employee.avatarColor} status={employee.status} size="lg" />
-                      <div>
-                        <h3 style={{ fontSize: "16px", fontWeight: "600", margin: 0, color: "#ffffff" }}>{employee.name}</h3>
-                        <span style={{ fontSize: "13px", color: "#94a3b8" }}>{employee.role} · <strong style={{ color: "#818cf8" }}>{employee.department}</strong></span>
+                  <div key={employee.id} className="team-card">
+                    <div style={{ display: "flex", alignItems: "center", justifyItems: "center", justifyContent: "space-between", gap: "12px" }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                        <Avatar initials={employee.initials} color={employee.avatarColor} status={employee.status} size="lg" />
+                        <div>
+                          <h3 style={{ fontSize: "16px", fontWeight: "700", margin: 0, color: "#ffffff" }}>{employee.name}</h3>
+                          <span style={{ fontSize: "12px", color: "#94a3b8" }}>{employee.role}</span>
+                        </div>
                       </div>
+                      <span className="dept-badge" style={{
+                        background: employee.department === "TECHNOLOGY" ? "rgba(59, 130, 246, 0.12)" : employee.department === "OPERATION" ? "rgba(16, 185, 129, 0.12)" : employee.department === "WEALTH" ? "rgba(139, 92, 246, 0.12)" : "rgba(245, 158, 11, 0.12)",
+                        color: employee.department === "TECHNOLOGY" ? "#60a5fa" : employee.department === "OPERATION" ? "#34d399" : employee.department === "WEALTH" ? "#a78bfa" : "#fbbf24"
+                      }}>
+                        {employee.department}
+                      </span>
                     </div>
 
-                    <div style={{ display: "flex", justifyContent: "space-between", fontSize: "13px", color: "#cbd5e1" }}>
-                      <span>Active: <strong>{employee.taskCount}</strong></span>
-                      <span>Completed: <strong>{employee.completedCount}</strong></span>
+                    {employee.reportsToName && (
+                      <div style={{ fontSize: "12px", color: "#64748b", background: "rgba(255,255,255,0.02)", padding: "6px 12px", borderRadius: "8px", border: "1px solid rgba(255,255,255,0.03)" }}>
+                        Reports to: <strong style={{ color: "#cbd5e1" }}>{employee.reportsToName}</strong>
+                      </div>
+                    )}
+
+                    <div style={{ display: "flex", justifyContent: "space-between", fontSize: "13px", color: "#cbd5e1", borderTop: "1px dashed rgba(255,255,255,0.06)", paddingTop: "12px" }}>
+                      <span>Active Tasks: <strong style={{ color: "#818cf8" }}>{employee.taskCount}</strong></span>
+                      <span>Completed: <strong style={{ color: "#34d399" }}>{employee.completedCount}</strong></span>
                     </div>
 
                     <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
@@ -218,8 +248,8 @@ export default function TeamPage() {
                       </div>
                     </div>
 
-                    <div style={{ fontSize: "13px", color: "#64748b", borderTop: "1px solid rgba(255,255,255,0.05)", paddingTop: "10px", marginTop: "4px" }}>
-                      Email: <span style={{ color: "#cbd5e1" }}>{employee.email}</span>
+                    <div style={{ fontSize: "12px", color: "#64748b", borderTop: "1px solid rgba(255,255,255,0.05)", paddingTop: "10px", marginTop: "4px" }}>
+                      Email: <span style={{ color: "#cbd5e1", fontFamily: "monospace" }}>{employee.email}</span>
                     </div>
                   </div>
                 ))

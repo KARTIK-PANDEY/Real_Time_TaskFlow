@@ -4,6 +4,7 @@ import { useDashboard } from "../layout";
 import { useState, useMemo } from "react";
 import { Check, CheckCircle2, CircleHelp, Pause, Play, Plus, Search, ChevronDown, CalendarDays } from "lucide-react";
 import type { TaskStatus, TaskView, TaskPriority } from "@/lib/types";
+import TaskSpreadsheet from "@/components/TaskSpreadsheet";
 
 function Avatar({ initials, color, status, size = "md" }: { initials: string; color: string; status?: string; size?: "sm" | "md" | "lg" }) {
   const sizeClass = size === "sm" ? "avatar-sm" : size === "lg" ? "avatar-lg" : "";
@@ -177,9 +178,10 @@ function TaskRow({
 }
 
 export default function TasksPage() {
-  const { data, query, setQuery, updateTaskStatus, handleTimer, timer, tick, setNewTaskOpen, user, isAdmin } = useDashboard();
+  const { data, query, setQuery, updateTaskStatus, handleTimer, timer, tick, setNewTaskOpen, user, isAdmin, refreshData } = useDashboard();
   const [filter, setFilter] = useState<string>("all");
   const [showAllTasks, setShowAllTasks] = useState(isAdmin);
+  const [activeTab, setActiveTab] = useState<"list" | "spreadsheet">("list");
 
   const taskFilters = [
     { id: "all", label: "All tasks" },
@@ -221,80 +223,126 @@ export default function TasksPage() {
       </section>
 
       <article className="panel tasks-panel">
-        <div className="panel-heading task-heading">
+        <div className="panel-heading task-heading" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "12px" }}>
           <div>
             <span className="panel-kicker">Work queue</span>
             <h2>Tasks List <span>{filteredTasks.length}</span></h2>
           </div>
-        </div>
-        <div className="task-toolbar" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <div className="task-filters">
-            {taskFilters.map((item) => (
-              <button
-                key={item.id}
-                className={filter === item.id ? "active" : ""}
-                onClick={() => setFilter(item.id)}
-              >
-                {item.label}
-              </button>
-            ))}
+          <div style={{ display: "flex", background: "rgba(255, 255, 255, 0.03)", border: "1px solid rgba(255, 255, 255, 0.08)", padding: "4px", borderRadius: "10px", gap: "4px" }}>
+            <button
+              onClick={() => setActiveTab("list")}
+              style={{
+                padding: "6px 14px",
+                border: "none",
+                borderRadius: "8px",
+                cursor: "pointer",
+                fontSize: "12px",
+                fontWeight: "600",
+                background: activeTab === "list" ? "rgba(99, 102, 241, 0.15)" : "transparent",
+                color: activeTab === "list" ? "#ffffff" : "#64748b",
+                transition: "all 0.2s ease"
+              }}
+            >
+              Queue List
+            </button>
+            <button
+              onClick={() => setActiveTab("spreadsheet")}
+              style={{
+                padding: "6px 14px",
+                border: "none",
+                borderRadius: "8px",
+                cursor: "pointer",
+                fontSize: "12px",
+                fontWeight: "600",
+                background: activeTab === "spreadsheet" ? "rgba(99, 102, 241, 0.15)" : "transparent",
+                color: activeTab === "spreadsheet" ? "#ffffff" : "#64748b",
+                transition: "all 0.2s ease"
+              }}
+            >
+              Spreadsheet View
+            </button>
           </div>
+        </div>
 
-          {!isAdmin && (
-            <div className="teammate-scope-toggle" style={{ display: "flex", gap: "6px", background: "#f0f0f3", padding: "4px", borderRadius: "8px" }}>
-              <style jsx>{`
-                .scope-btn {
-                  padding: 6px 12px;
-                  border: none;
-                  border-radius: 6px;
-                  font-size: 12px;
-                  font-weight: 600;
-                  cursor: pointer;
-                  transition: all 0.2s;
-                }
-                .scope-btn.active {
-                  background: #6c5edb;
-                  color: white;
-                  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-                }
-                .scope-btn.inactive {
-                  background: transparent;
-                  color: #64748b;
-                }
-              `}</style>
-              <button className={`scope-btn ${!showAllTasks ? "active" : "inactive"}`} onClick={() => setShowAllTasks(false)}>My Tasks</button>
-              <button className={`scope-btn ${showAllTasks ? "active" : "inactive"}`} onClick={() => setShowAllTasks(true)}>All Team Tasks</button>
+        {activeTab === "spreadsheet" ? (
+          <TaskSpreadsheet
+            employees={data.employees}
+            projects={data.projects}
+            currentUser={user}
+            onSaveSuccess={() => refreshData(true)}
+          />
+        ) : (
+          <>
+            <div className="task-toolbar" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <div className="task-filters">
+                {taskFilters.map((item) => (
+                  <button
+                    key={item.id}
+                    className={filter === item.id ? "active" : ""}
+                    onClick={() => setFilter(item.id)}
+                  >
+                    {item.label}
+                  </button>
+                ))}
+              </div>
+
+              {!isAdmin && (
+                <div className="teammate-scope-toggle" style={{ display: "flex", gap: "6px", background: "#f0f0f3", padding: "4px", borderRadius: "8px" }}>
+                  <style jsx>{`
+                    .scope-btn {
+                      padding: 6px 12px;
+                      border: none;
+                      border-radius: 6px;
+                      font-size: 12px;
+                      font-weight: 600;
+                      cursor: pointer;
+                      transition: all 0.2s;
+                    }
+                    .scope-btn.active {
+                      background: #6c5edb;
+                      color: white;
+                      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+                    }
+                    .scope-btn.inactive {
+                      background: transparent;
+                      color: #64748b;
+                    }
+                  `}</style>
+                  <button className={`scope-btn ${!showAllTasks ? "active" : "inactive"}`} onClick={() => setShowAllTasks(false)}>My Tasks</button>
+                  <button className={`scope-btn ${showAllTasks ? "active" : "inactive"}`} onClick={() => setShowAllTasks(true)}>All Team Tasks</button>
+                </div>
+              )}
             </div>
-          )}
-        </div>
-        
-        <div className="task-table-head">
-          <span>Task</span><span>Project</span><span>Assignee</span><span>Due</span><span>Status</span><span>Tracked</span>
-        </div>
-        
-        <div className="task-list">
-          {filteredTasks.length ? (
-            filteredTasks.map((task) => (
-              <TaskRow
-                key={task.id}
-                task={task}
-                timer={timer}
-                tick={tick}
-                onStatus={updateTaskStatus}
-                onTimer={handleTimer}
-                disabled={!isAdmin && task.assignee.id !== user.id}
-                currentUser={user}
-              />
-            ))
-          ) : (
-            <div className="empty-state">
-              <Search size={22} />
-              <strong>No matching tasks</strong>
-              <span>Try a different search or task filter.</span>
-              <button onClick={() => { setQuery(""); setFilter("all"); }}>Clear filters</button>
+            
+            <div className="task-table-head">
+              <span>Task</span><span>Project</span><span>Assignee</span><span>Due</span><span>Status</span><span>Tracked</span>
             </div>
-          )}
-        </div>
+            
+            <div className="task-list">
+              {filteredTasks.length ? (
+                filteredTasks.map((task) => (
+                  <TaskRow
+                    key={task.id}
+                    task={task}
+                    timer={timer}
+                    tick={tick}
+                    onStatus={updateTaskStatus}
+                    onTimer={handleTimer}
+                    disabled={!isAdmin && task.assignee.id !== user.id}
+                    currentUser={user}
+                  />
+                ))
+              ) : (
+                <div className="empty-state">
+                  <Search size={22} />
+                  <strong>No matching tasks</strong>
+                  <span>Try a different search or task filter.</span>
+                  <button onClick={() => { setQuery(""); setFilter("all"); }}>Clear filters</button>
+                </div>
+              )}
+            </div>
+          </>
+        )}
       </article>
 
       <footer className="dashboard-footer">
