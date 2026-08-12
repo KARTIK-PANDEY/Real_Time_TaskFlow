@@ -5,6 +5,10 @@ import { eq, or } from "drizzle-orm";
 
 export async function POST(request: Request) {
   try {
+    const dbUrl = process.env.DATABASE_URL || "not set";
+    const maskedUrl = dbUrl.replace(/:[^:@\/\s]+@/, ":****@");
+    console.log("LOGIN ROUTE connecting to database:", maskedUrl);
+
     await ensureSeedData();
     const { email, password } = await request.json();
 
