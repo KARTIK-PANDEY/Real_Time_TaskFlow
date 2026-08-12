@@ -40,6 +40,9 @@ export const employees = pgTable("employees", {
   avatarColor: varchar("avatar_color", { length: 20 }).notNull(),
   status: employeeStatusEnum("status").notNull().default("offline"),
   isActive: boolean("is_active").notNull().default(true),
+  isAdmin: boolean("is_admin").notNull().default(false),
+  reportsToId: integer("reports_to_id").references((): any => employees.id, { onDelete: "set null" }),
+  orgRole: varchar("org_role", { length: 20 }).notNull().default("EMPLOYEE"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 

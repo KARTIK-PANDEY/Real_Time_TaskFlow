@@ -6,6 +6,7 @@ export type EmployeeView = {
   id: number;
   name: string;
   email: string;
+  loginId?: string | null;
   role: string;
   department: string;
   avatarColor: string;
@@ -14,6 +15,9 @@ export type EmployeeView = {
   taskCount: number;
   completedCount: number;
   workload: number;
+  reportsToId?: number | null;
+  orgRole?: string;
+  reportsToName?: string | null;
 };
 
 export type TaskView = {
@@ -34,6 +38,8 @@ export type TaskView = {
     initials: string;
     avatarColor: string;
     status: EmployeeStatus;
+    reportsToId?: number | null;
+    reportsToName?: string | null;
   };
 };
 

@@ -19,12 +19,11 @@ function relativeDate(days: number, hour = 17) {
   return date;
 }
 
-export async function ensureSeedData() {
-  const oldTeammate = await db.select().from(employees).where(eq(employees.name, "Sanjiv Rathi")).limit(1);
-  const adminTeammate = await db.select().from(employees).where(eq(employees.name, "Anita Sheikh")).limit(1);
+export async function ensureSeedData(force = false) {
+  const mdTeammate = await db.select().from(employees).where(eq(employees.name, "Sanjiv Rathi")).limit(1);
   const [{ value }] = await db.select({ value: count() }).from(employees);
 
-  if (oldTeammate.length > 0 || adminTeammate.length === 0 || Number(value) === 0) {
+  if (force || mdTeammate.length === 0 || Number(value) < 28) {
     // Clear old data to re-seed with only actual Disa Financial new team
     await db.delete(notifications);
     await db.delete(activities);
@@ -35,83 +34,146 @@ export async function ensureSeedData() {
   }
 
   await db.transaction(async (tx) => {
-    const seededEmployees = await tx
-      .insert(employees)
-      .values([
-        {
-          name: "Lumeshwari Nirmal",
-          email: "lumeshwari.nirmal@disafinancial.com",
-          loginId: "lumeshwari",
-          password: "lumeshwari123",
-          role: "Back Office",
-          department: "OPERATION",
-          avatarColor: "#3c9b87",
-          status: "online",
-        },
-        {
-          name: "Rupa Gupta",
-          email: "rupa.gupta@disafinancial.com",
-          loginId: "rupa",
-          password: "rupa123",
-          role: "Back Office",
-          department: "OPERATION",
-          avatarColor: "#a870b8",
-          status: "online",
-        },
-        {
-          name: "RENU TANDI",
-          email: "renu.tandi@disafinancial.com",
-          loginId: "renu",
-          password: "renu123",
-          role: "Back Office",
-          department: "OPERATION",
-          avatarColor: "#d5a34a",
-          status: "away",
-        },
-        {
-          name: "RISHU PATLE",
-          email: "rishu.patle@disafinancial.com",
-          loginId: "rishu",
-          password: "rishu123",
-          role: "Back Office",
-          department: "OPERATION",
-          avatarColor: "#ec8d72",
-          status: "online",
-        },
-        {
-          name: "RANJAY TANDI",
-          email: "ranjay.tandi@disafinancial.com",
-          loginId: "ranjay",
-          password: "ranjay123",
-          role: "Office Boy",
-          department: "Housekeeping",
-          avatarColor: "#6877c9",
-          status: "offline",
-        },
-        {
-          name: "Shrishti Manekar",
-          email: "shrishti.manekar@disafinancial.com",
-          loginId: "shrishti",
-          password: "shrishti123",
-          role: "Operation Executive",
-          department: "Operations/ Marketing",
-          avatarColor: "#e77862",
-          status: "online",
-        },
-        {
-          name: "Anita Sheikh",
-          email: "anita.sheikh@disafinancial.com",
-          loginId: "anita",
-          password: "anita123",
-          role: "Sales Manager",
-          department: "Marketing",
-          avatarColor: "#a870b8",
-          status: "online",
-        },
-      ])
-      .returning();
+    // 1. Insert MD
+    const [md] = await tx.insert(employees).values({
+      name: "Sanjiv Rathi",
+      email: "sanjiv.rathi@disafinancial.com",
+      loginId: "sanjiv",
+      password: "sanjiv123",
+      role: "Managing Director",
+      department: "Management",
+      avatarColor: "#3c9b87",
+      status: "online",
+      isAdmin: true,
+      orgRole: "MD",
+      reportsToId: null,
+    }).returning();
 
-    const employee = Object.fromEntries(seededEmployees.map((item) => [item.name, item]));
+    const nameToId: Record<string, number> = {
+      "Sanjiv Rathi": md.id
+    };
+
+    // 2. Level 2 (reports to Sanjiv Rathi)
+    const level2Values = [
+      { name: "Sheikh Irfan", email: "sheikh.irfan@disafinancial.com", loginId: "irfan", role: "Head of Operations", dept: "OPERATION" },
+      { name: "Alka Gopawar", email: "alka.gopawar@disafinancial.com", loginId: "alka", role: "Head of Finance", dept: "FINANCE" },
+      { name: "Loknath Sahu", email: "loknath.sahu@disafinancial.com", loginId: "loknath", role: "Head of Sales", dept: "SALES" },
+      { name: "Kirti Shrivastava", email: "kirti.shrivastava@disafinancial.com", loginId: "kirti", role: "Senior Wealth Advisor", dept: "WEALTH" },
+      { name: "Prashita Sheolikar", email: "prashita.sheolikar@disafinancial.com", loginId: "prashita", role: "Senior Advisor", dept: "WEALTH" },
+      { name: "Anmol Singh Hariyaow", email: "anmol.singh@disafinancial.com", loginId: "anmol", role: "Advisor", dept: "WEALTH" },
+      { name: "Karandeep Kaur Bhullar", email: "karandeep.kaur@disafinancial.com", loginId: "karandeep", role: "Advisor", dept: "WEALTH" },
+      { name: "Aditya Pandey", email: "aditya.pandey@disafinancial.com", loginId: "aditya", role: "Advisor", dept: "WEALTH" },
+      { name: "Kartik Pandey", email: "kartik.pandey@disafinancial.com", loginId: "kartik", role: "Senior Developer", dept: "TECHNOLOGY" },
+      { name: "Anita Sheikh", email: "anita.sheikh@disafinancial.com", loginId: "anita", role: "Sales Manager", dept: "Marketing" }
+    ];
+
+    const level2Employees = await tx.insert(employees).values(
+      level2Values.map(item => ({
+        name: item.name,
+        email: item.email,
+        loginId: item.loginId,
+        password: `${item.loginId}123`,
+        role: item.role,
+        department: item.dept,
+        avatarColor: "#a870b8",
+        status: "online" as const,
+        isAdmin: true,
+        orgRole: "MANAGER",
+        reportsToId: md.id
+      }))
+    ).returning();
+
+    level2Employees.forEach(emp => {
+      nameToId[emp.name] = emp.id;
+    });
+
+    // 3. Level 3
+    const level3Values = [
+      { name: "Sagar Gadamwar", email: "sagar.gadamwar@disafinancial.com", loginId: "sagar", role: "Operations Lead", dept: "OPERATION", reportsTo: "Sheikh Irfan" },
+      { name: "Snehil Khare", email: "snehil.khare@disafinancial.com", loginId: "snehil", role: "Assistant Manager", dept: "OPERATION", reportsTo: "Sheikh Irfan" },
+      { name: "Seema Sahu", email: "seema.sahu@disafinancial.com", loginId: "seema", role: "Executive", dept: "OPERATION", reportsTo: "Sheikh Irfan" },
+      { name: "Nitin Lulla", email: "nitin.lulla@disafinancial.com", loginId: "nitin", role: "Executive", dept: "OPERATION", reportsTo: "Sheikh Irfan" },
+      { name: "Deepa Chatterjee", email: "deepa.chatterjee@disafinancial.com", loginId: "deepa", role: "Finance Assistant", dept: "FINANCE", reportsTo: "Alka Gopawar" },
+      { name: "Narsingh Das Manikpuri", email: "narsingh.das@disafinancial.com", loginId: "narsingh", role: "Sales Executive", dept: "SALES", reportsTo: "Loknath Sahu" },
+      { name: "Miss Dolly Thakur", email: "dolly.thakur@disafinancial.com", loginId: "dolly", role: "Wealth Advisor Assistant", dept: "WEALTH", reportsTo: "Kirti Shrivastava" },
+      { name: "Dipika Sen", email: "dipika.sen@disafinancial.com", loginId: "dipika", role: "Advisor Assistant", dept: "WEALTH", reportsTo: "Prashita Sheolikar" },
+
+      // Existing teammates under Anita Sheikh
+      { name: "Lumeshwari Nirmal", email: "lumeshwari.nirmal@disafinancial.com", loginId: "lumeshwari", role: "Back Office", dept: "OPERATION", reportsTo: "Anita Sheikh" },
+      { name: "Rupa Gupta", email: "rupa.gupta@disafinancial.com", loginId: "rupa", role: "Back Office", dept: "OPERATION", reportsTo: "Anita Sheikh" },
+      { name: "RENU TANDI", email: "renu.tandi@disafinancial.com", loginId: "renu", role: "Back Office", dept: "OPERATION", reportsTo: "Anita Sheikh" },
+      { name: "RISHU PATLE", email: "rishu.patle@disafinancial.com", loginId: "rishu", role: "Back Office", dept: "OPERATION", reportsTo: "Anita Sheikh" },
+      { name: "RANJAY TANDI", email: "ranjay.tandi@disafinancial.com", loginId: "ranjay", role: "Office Boy", dept: "Housekeeping", reportsTo: "Anita Sheikh" },
+      { name: "Shrishti Manekar", email: "shrishti.manekar@disafinancial.com", loginId: "shrishti", role: "Operation Executive", dept: "Operations/ Marketing", reportsTo: "Anita Sheikh" }
+    ];
+
+    const level3Employees = await tx.insert(employees).values(
+      level3Values.map(item => ({
+        name: item.name,
+        email: item.email,
+        loginId: item.loginId,
+        password: `${item.loginId.toLowerCase()}123`,
+        role: item.role,
+        department: item.dept,
+        avatarColor: item.name === "RENU TANDI" ? "#d5a34a" : item.name === "Rupa Gupta" ? "#a870b8" : "#ec8d72",
+        status: (item.name === "RENU TANDI" ? "away" : item.name === "RANJAY TANDI" ? "offline" : "online") as "online" | "focus" | "away" | "offline",
+        isAdmin: false,
+        orgRole: "EMPLOYEE",
+        reportsToId: nameToId[item.reportsTo]
+      }))
+    ).returning();
+
+    level3Employees.forEach(emp => {
+      nameToId[emp.name] = emp.id;
+    });
+
+    // 4. Level 4 (reports to Snehil Khare)
+    const level4Values = [
+      { name: "S. Venkatesh Rao", email: "venkatesh.rao@disafinancial.com", loginId: "venkatesh", role: "Support Staff", dept: "OPERATION", reportsTo: "Snehil Khare" },
+      { name: "Shekhar Nirmalkar", email: "shekhar.nirmalkar@disafinancial.com", loginId: "shekhar", role: "Support Staff", dept: "OPERATION", reportsTo: "Snehil Khare" },
+      { name: "Padma", email: "padma@disafinancial.com", loginId: "padma", role: "Support Staff", dept: "OPERATION", reportsTo: "Snehil Khare" }
+    ];
+
+    const level4Employees = await tx.insert(employees).values(
+      level4Values.map(item => ({
+        name: item.name,
+        email: item.email,
+        loginId: item.loginId,
+        password: `${item.loginId}123`,
+        role: item.role,
+        department: item.dept,
+        avatarColor: "#6877c9",
+        status: "online" as const,
+        isAdmin: false,
+        orgRole: "EMPLOYEE",
+        reportsToId: nameToId[item.reportsTo]
+      }))
+    ).returning();
+
+    level4Employees.forEach(emp => {
+      nameToId[emp.name] = emp.id;
+    });
+
+    // Recalculate orgRoles dynamically based on the hierarchy
+    const allEmployees = await tx.select().from(employees);
+    const reportsToMap = new Set(allEmployees.map(e => e.reportsToId).filter(Boolean) as number[]);
+    for (const emp of allEmployees) {
+      let orgRole: "MD" | "MANAGER" | "EMPLOYEE" = "EMPLOYEE";
+      if (emp.reportsToId === null) {
+        orgRole = "MD";
+      } else if (reportsToMap.has(emp.id)) {
+        orgRole = "MANAGER";
+      }
+
+      await tx.update(employees)
+        .set({
+          orgRole,
+          isAdmin: orgRole === "MD" || orgRole === "MANAGER"
+        })
+        .where(eq(employees.id, emp.id));
+    }
+
+    const employee = Object.fromEntries(allEmployees.map((item) => [item.name, item]));
 
     const seededTasks = await tx
       .insert(tasks)
@@ -300,6 +362,8 @@ export async function getDashboardData(): Promise<DashboardData> {
       .limit(12),
   ]);
 
+  const employeeNameMap = new Map(employeeRows.map(emp => [emp.id, emp.name]));
+
   const employeeViews = employeeRows.map((employee) => {
     const assigned = taskRows.filter((row) => row.task.assigneeId === employee.id);
     const active = assigned.filter((row) => row.task.status !== "completed");
@@ -309,6 +373,7 @@ export async function getDashboardData(): Promise<DashboardData> {
       id: employee.id,
       name: employee.name,
       email: employee.email,
+      loginId: employee.loginId,
       role: employee.role,
       department: employee.department,
       avatarColor: employee.avatarColor,
@@ -317,29 +382,39 @@ export async function getDashboardData(): Promise<DashboardData> {
       taskCount: active.length,
       completedCount: assigned.filter((row) => row.task.status === "completed").length,
       workload: Math.min(100, Math.round((estimated / 720) * 100)),
+      reportsToId: employee.reportsToId,
+      orgRole: employee.orgRole,
+      reportsToName: employee.reportsToId ? employeeNameMap.get(employee.reportsToId) : null,
     };
   });
 
-  const taskViews = taskRows.map(({ task, employee }) => ({
-    id: task.id,
-    title: task.title,
-    description: task.description,
-    project: task.project,
-    status: task.status,
-    priority: task.priority,
-    progress: task.progress,
-    estimatedMinutes: task.estimatedMinutes,
-    trackedMinutes: task.trackedMinutes,
-    dueAt: task.dueAt.toISOString(),
-    updatedAt: task.updatedAt.toISOString(),
-    assignee: {
-      id: employee.id,
-      name: employee.name,
-      initials: initials(employee.name),
-      avatarColor: employee.avatarColor,
-      status: employee.status as EmployeeStatus,
-    },
-  }));
+  const taskViews = taskRows.map(({ task, employee }) => {
+    const assigneeReportsToId = employee.reportsToId;
+    const assigneeReportsToName = assigneeReportsToId ? employeeNameMap.get(assigneeReportsToId) : null;
+
+    return {
+      id: task.id,
+      title: task.title,
+      description: task.description,
+      project: task.project,
+      status: task.status,
+      priority: task.priority,
+      progress: task.progress,
+      estimatedMinutes: task.estimatedMinutes,
+      trackedMinutes: task.trackedMinutes,
+      dueAt: task.dueAt.toISOString(),
+      updatedAt: task.updatedAt.toISOString(),
+      assignee: {
+        id: employee.id,
+        name: employee.name,
+        initials: initials(employee.name),
+        avatarColor: employee.avatarColor,
+        status: employee.status as EmployeeStatus,
+        reportsToId: assigneeReportsToId,
+        reportsToName: assigneeReportsToName,
+      },
+    };
+  });
 
   const now = new Date();
   const todayKey = now.toISOString().slice(0, 10);

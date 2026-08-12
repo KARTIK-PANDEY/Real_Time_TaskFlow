@@ -120,7 +120,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const [tick, setTick] = useState(() => Date.now());
   const timerIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
-  const isAdmin = user ? (user.email === "anita.sheikh@disafinancial.com" || user.loginId === "anita") : false;
+  const isAdmin = user ? !!user.isAdmin : false;
 
   // Dynamically recalculate task tracked minutes based on active timer elapsed time
   const adjustedData = useMemo(() => {
@@ -365,7 +365,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     try {
       const res = await fetch("/api/tasks", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "x-user-id": user ? String(user.id) : "",
+        },
         body: JSON.stringify(taskData),
       });
       const updated = await res.json();
@@ -383,7 +386,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     try {
       const res = await fetch(`/api/tasks/${taskId}`, {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "x-user-id": user ? String(user.id) : "",
+        },
         body: JSON.stringify({ status }),
       });
       const updated = await res.json();
@@ -408,7 +414,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       try {
         const res = await fetch(`/api/tasks/${task.id}`, {
           method: "PATCH",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            "x-user-id": user ? String(user.id) : "",
+          },
           body: JSON.stringify({ trackedMinutes: totalMinutes }),
         });
         const updated = await res.json();
@@ -477,8 +486,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const navItems = [
     { id: "/", label: "Overview", icon: LayoutDashboard },
     { id: "/tasks", label: "Tasks", icon: ListChecks },
-    { id: "/team", label: "Team", icon: Users },
-    { id: "/reports", label: "Reports", icon: BarChart3 },
+    ...(isAdmin
+      ? [
+          { id: "/team", label: "Team", icon: Users },
+          { id: "/reports", label: "Reports", icon: BarChart3 },
+        ]
+      : []),
   ];
 
   const onlineCount = data.employees.filter((emp) => emp.status === "online" || emp.status === "focus").length;

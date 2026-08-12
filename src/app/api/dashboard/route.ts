@@ -10,6 +10,6 @@ export async function GET() {
     });
   } catch (error) {
     console.error("Unable to load dashboard", error);
-    return Response.json({ error: "Unable to load dashboard data." }, { status: 500 });
+    return Response.json({ error: "Unable to load Dashboard Data." }, { status: 500 });
   }
 }

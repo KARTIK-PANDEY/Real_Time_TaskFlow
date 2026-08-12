@@ -16,7 +16,8 @@ const AVATAR_COLORS = [
 export async function POST(request: Request) {
   try {
     await ensureSeedData();
-    const { name, email, loginId, role, department, password } = await request.json();
+    const body = await request.json();
+    const { name, email, loginId, role, department, password, reportsToId } = body;
 
     if (!name || !email || !role || !department || !password) {
       return Response.json({ error: "All fields are required." }, { status: 400 });
@@ -43,6 +44,13 @@ export async function POST(request: Request) {
     // Pick random avatar color
     const avatarColor = AVATAR_COLORS[Math.floor(Math.random() * AVATAR_COLORS.length)];
 
+    const isManagerOrAdminRole =
+      role.toLowerCase().includes("manager") ||
+      role.toLowerCase().includes("admin") ||
+      role.toLowerCase().includes("director") ||
+      role.toLowerCase().includes("head") ||
+      role.toLowerCase().includes("owner");
+
     // Insert new employee
     const [newEmployee] = await db
       .insert(employees)
@@ -56,8 +64,29 @@ export async function POST(request: Request) {
         avatarColor,
         status: "online",
         isActive: true,
+        isAdmin: isManagerOrAdminRole,
+        reportsToId: reportsToId ? Number(reportsToId) : null,
       })
       .returning();
+
+    // Recalculate orgRoles dynamically based on the hierarchy
+    const allEmployees = await db.select().from(employees);
+    const reportsToMap = new Set(allEmployees.map(e => e.reportsToId).filter(Boolean) as number[]);
+    for (const emp of allEmployees) {
+      let orgRole: "MD" | "MANAGER" | "EMPLOYEE" = "EMPLOYEE";
+      if (emp.reportsToId === null) {
+        orgRole = "MD";
+      } else if (reportsToMap.has(emp.id)) {
+        orgRole = "MANAGER";
+      }
+      
+      await db.update(employees)
+        .set({
+          orgRole,
+          isAdmin: orgRole === "MD" || orgRole === "MANAGER"
+        })
+        .where(eq(employees.id, emp.id));
+    }
 
     // Compute initials
     const initials = newEmployee.name
@@ -77,6 +106,7 @@ export async function POST(request: Request) {
         department: newEmployee.department,
         avatarColor: newEmployee.avatarColor,
         status: newEmployee.status,
+        isAdmin: newEmployee.isAdmin,
         initials,
       },
     });

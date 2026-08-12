@@ -46,7 +46,8 @@ function TaskRow({
   tick,
   onStatus,
   onTimer,
-  disabled = false,
+  disabled,
+  currentUser,
 }: {
   task: TaskView;
   timer: any;
@@ -54,17 +55,21 @@ function TaskRow({
   onStatus: (taskId: number, status: string) => void;
   onTimer: (task: TaskView) => void;
   disabled?: boolean;
+  currentUser?: any;
 }) {
   const isTiming = timer?.taskId === task.id;
   const elapsedSeconds = isTiming ? Math.floor((tick - timer.startedAt) / 1000) : 0;
   const displaySeconds = task.trackedMinutes * 60 + elapsedSeconds;
   const isDueToday = dueCopy(task.dueAt) === "Today";
 
+  const isEmployee = currentUser?.orgRole === "EMPLOYEE";
+  const checkboxDisabled = disabled || isEmployee;
+
   const statusCopy: Record<string, string> = {
     todo: "To do",
     in_progress: "In progress",
     review: "In review",
-    completed: "Completed",
+    ...(isEmployee ? {} : { completed: "Completed" }),
   };
 
   return (
@@ -90,10 +95,10 @@ function TaskRow({
       `}</style>
 
       <button
-        className={`task-check status-check-${task.status} ${disabled ? "is-disabled" : ""}`}
+        className={`task-check status-check-${task.status} ${checkboxDisabled ? "is-disabled" : ""}`}
         aria-label={task.status === "completed" ? "Reopen task" : "Complete task"}
-        onClick={() => !disabled && onStatus(task.id, task.status === "completed" ? "todo" : "completed")}
-        disabled={disabled}
+        onClick={() => !checkboxDisabled && onStatus(task.id, task.status === "completed" ? "todo" : "completed")}
+        disabled={checkboxDisabled}
       >
         {task.status === "completed" && <Check size={14} strokeWidth={3} />}
       </button>
@@ -118,14 +123,21 @@ function TaskRow({
         <small>{task.progress}% complete</small>
       </div>
 
-      <div className="task-owner">
-        <Avatar
-          initials={task.assignee.initials}
-          color={task.assignee.avatarColor}
-          size="sm"
-          status={task.assignee.status}
-        />
-        <span>{task.assignee.name.split(" ")[0]}</span>
+      <div className="task-owner" style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", gap: "2px" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+          <Avatar
+            initials={task.assignee.initials}
+            color={task.assignee.avatarColor}
+            size="sm"
+            status={task.assignee.status}
+          />
+          <span>{task.assignee.name.split(" ")[0]}</span>
+        </div>
+        {task.assignee.reportsToName && (
+          <small style={{ fontSize: "10px", color: "#64748b", marginLeft: "28px" }}>
+            Manager: {task.assignee.reportsToName.split(" ")[0]}
+          </small>
+        )}
       </div>
 
       <div className={`task-date ${isDueToday ? "is-today" : ""}`}>
@@ -271,6 +283,7 @@ export default function TasksPage() {
                 onStatus={updateTaskStatus}
                 onTimer={handleTimer}
                 disabled={!isAdmin && task.assignee.id !== user.id}
+                currentUser={user}
               />
             ))
           ) : (

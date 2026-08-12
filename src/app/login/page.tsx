@@ -38,7 +38,7 @@ export default function LoginPage() {
 
       // Store authenticated user in localStorage
       localStorage.setItem("user", JSON.stringify(data.user));
-      
+
       // Redirect to dashboard
       router.push("/");
     } catch (err: any) {
@@ -59,19 +59,19 @@ export default function LoginPage() {
         .auth-container {
           min-height: 100vh;
           display: flex;
-          align-items: center;
+          align-items: center;  
           justify-content: center;
           padding: 24px;
           background: radial-gradient(circle at 50% 50%, #1e1e38 0%, #0d0d1e 100%);
-          font-family: var(--font-geist-sans), sans-serif;
+          font-family: var(--font-geist-sans), sans-serif; 
           color: #f1f5f9;
         }
         .auth-card {
           width: 100%;
           max-width: 440px;
-          background: rgba(26, 26, 46, 0.65);
+          background: rgba(26, 26, 46, 0.65); 
           backdrop-filter: blur(16px);
-          border: 1px solid rgba(255, 255, 255, 0.08);
+          border: 1px solid rgba(255, 255, 255, 0.08); 
           border-radius: 20px;
           padding: 40px;
           box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);

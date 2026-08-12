@@ -79,7 +79,7 @@ export default function OverviewPage() {
 
   if (!data || !user) return null;
 
-  const isAdmin = user.email === "anita.sheikh@disafinancial.com" || user.loginId === "anita";
+  const isAdmin = !!user.isAdmin;
 
   const onlineCount = data.employees.filter((emp) => emp.status === "online" || emp.status === "focus").length;
   const today = new Intl.DateTimeFormat("en-US", {

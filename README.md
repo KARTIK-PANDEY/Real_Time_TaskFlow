@@ -123,5 +123,5 @@ npx drizzle-kit push
 
 ## 👨‍💻 Author & Developed By
 
-###   **KARTIK PANDEY**
+### **KARTIK PANDEY**
 Lead Full-Stack Software Developer

@@ -21,10 +21,10 @@ export async function POST(request: Request) {
       .where(
         or(
           eq(employees.email, inputVal),
-          eq(employees.loginId, inputVal)
+          eq(employees.loginId, inputVal) 
         )
       )
-      .limit(1);
+      .limit(1); 
 
     if (!employee) {
       return Response.json({ error: "Employee email or User ID not registered." }, { status: 404 });
@@ -53,6 +53,7 @@ export async function POST(request: Request) {
         department: employee.department,
         avatarColor: employee.avatarColor,
         status: employee.status,
+        isAdmin: employee.isAdmin,
         initials,
       },
     });
