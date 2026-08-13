@@ -132,16 +132,31 @@ export default function ReportsPage() {
         
         /* Vibrant Stats Styling */
         .stat-card.vibrant-blue {
-          background: linear-gradient(135deg, rgba(37, 99, 235, 0.18) 0%, rgba(13, 13, 29, 0.6) 100%) !important;
-          border: 1px solid rgba(59, 130, 246, 0.25) !important;
+          background: linear-gradient(135deg, rgba(59, 130, 246, 0.12) 0%, rgba(9, 13, 22, 0.6) 100%) !important;
+          border: 1px solid rgba(59, 130, 246, 0.2) !important;
+          backdrop-filter: blur(12px) !important;
+        }
+        .stat-card.vibrant-blue:hover {
+          border-color: rgba(59, 130, 246, 0.4) !important;
+          box-shadow: 0 12px 30px rgba(59, 130, 246, 0.15) !important;
         }
         .stat-card.vibrant-green {
-          background: linear-gradient(135deg, rgba(16, 185, 129, 0.18) 0%, rgba(13, 13, 29, 0.6) 100%) !important;
-          border: 1px solid rgba(16, 185, 129, 0.25) !important;
+          background: linear-gradient(135deg, rgba(16, 185, 129, 0.12) 0%, rgba(9, 13, 22, 0.6) 100%) !important;
+          border: 1px solid rgba(16, 185, 129, 0.2) !important;
+          backdrop-filter: blur(12px) !important;
+        }
+        .stat-card.vibrant-green:hover {
+          border-color: rgba(16, 185, 129, 0.4) !important;
+          box-shadow: 0 12px 30px rgba(16, 185, 129, 0.15) !important;
         }
         .stat-card.vibrant-purple {
-          background: linear-gradient(135deg, rgba(139, 92, 246, 0.18) 0%, rgba(13, 13, 29, 0.6) 100%) !important;
-          border: 1px solid rgba(139, 92, 246, 0.25) !important;
+          background: linear-gradient(135deg, rgba(139, 92, 246, 0.12) 0%, rgba(9, 13, 22, 0.6) 100%) !important;
+          border: 1px solid rgba(139, 92, 246, 0.2) !important;
+          backdrop-filter: blur(12px) !important;
+        }
+        .stat-card.vibrant-purple:hover {
+          border-color: rgba(139, 92, 246, 0.4) !important;
+          box-shadow: 0 12px 30px rgba(139, 92, 246, 0.15) !important;
         }
 
         .stat-card.vibrant-blue strong { color: #60a5fa !important; }
@@ -284,7 +299,7 @@ export default function ReportsPage() {
               const completionPercent = Math.round((proj.completed / Math.max(proj.total, 1)) * 100);
               return (
                 <div key={proj.name} style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: "14px" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "14px" }}>
                     <span style={{ fontWeight: "600", color: "#ffffff" }}>{proj.name}</span>
                     <span style={{ color: "#cbd5e1" }}>{completionPercent}% completed · <span style={{ color: "#818cf8", fontWeight: "500" }}>{formatMinutes(proj.minutesTracked)}</span></span>
                   </div>

@@ -173,16 +173,16 @@ export default function OrgHierarchy({ employees, currentUser, onRefresh }: OrgH
     const isCollapsed = collapsedNodes.has(node.id);
 
     return (
-      <div key={node.id} style={{ marginLeft: `${level * 24}px`, borderLeft: level > 0 ? "1px dashed rgba(255,255,255,0.08)" : "none", paddingLeft: level > 0 ? "16px" : 0 }}>
+      <div key={node.id} style={{ marginLeft: `${level * 24}px`, borderLeft: level > 0 ? "1px dashed rgba(129, 140, 248, 0.25)" : "none", paddingLeft: level > 0 ? "16px" : 0 }}>
         <div
           style={{
             display: "flex",
             alignItems: "center",
             gap: "12px",
-            padding: "8px 12px",
-            borderRadius: "8px",
-            background: "rgba(255, 255, 255, 0.01)",
-            border: "1px solid rgba(255, 255, 255, 0.03)",
+            padding: "10px 14px",
+            borderRadius: "10px",
+            background: "rgba(255, 255, 255, 0.03)",
+            border: "1px solid rgba(255, 255, 255, 0.06)",
             marginBottom: "8px",
             transition: "all 0.2s ease"
           }}
@@ -190,13 +190,13 @@ export default function OrgHierarchy({ employees, currentUser, onRefresh }: OrgH
           {hasChildren ? (
             <button
               onClick={() => toggleNode(node.id)}
-              style={{ background: "none", border: "none", color: "#64748b", cursor: "pointer", display: "flex", alignItems: "center", padding: 0 }}
+              style={{ background: "none", border: "none", color: "#818cf8", cursor: "pointer", display: "flex", alignItems: "center", padding: 0 }}
             >
               {isCollapsed ? <ChevronRight size={16} /> : <ChevronDown size={16} />}
             </button>
           ) : (
             <span style={{ width: "16px", height: "16px", display: "flex", alignItems: "center", justifyContent: "center" }}>
-              <GitCommit size={12} style={{ color: "rgba(255,255,255,0.15)" }} />
+              <GitCommit size={12} style={{ color: "rgba(129, 140, 248, 0.4)" }} />
             </span>
           )}
 
@@ -207,11 +207,11 @@ export default function OrgHierarchy({ employees, currentUser, onRefresh }: OrgH
             <span>{node.initials}</span>
           </div>
 
-          <div style={{ flex: 1 }}>
-            <span style={{ fontSize: "14px", fontWeight: "600", color: "#ffffff", marginRight: "8px" }}>
+          <div style={{ flex: 1, display: "flex", alignItems: "center", gap: "10px" }}>
+            <span style={{ fontSize: "14px", fontWeight: "600", color: "#ffffff" }}>
               {node.name}
             </span>
-            <span style={{ fontSize: "12px", color: "#64748b" }}>
+            <span style={{ fontSize: "12px", color: "#94a3b8" }}>
               {node.role} · <strong style={{ color: "#818cf8" }}>{node.department}</strong>
             </span>
           </div>
@@ -223,7 +223,7 @@ export default function OrgHierarchy({ employees, currentUser, onRefresh }: OrgH
               fontWeight: "bold",
               borderRadius: "4px",
               background: node.orgRole === "MD" ? "rgba(239, 68, 68, 0.15)" : node.orgRole === "MANAGER" ? "rgba(99, 102, 241, 0.15)" : "rgba(255,255,255,0.05)",
-              color: node.orgRole === "MD" ? "#ef4444" : node.orgRole === "MANAGER" ? "#6366f1" : "#94a3b8"
+              color: node.orgRole === "MD" ? "#ef4444" : node.orgRole === "MANAGER" ? "#6366f1" : "#cbd5e1"
             }}
           >
             {node.orgRole}

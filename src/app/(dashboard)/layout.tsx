@@ -727,7 +727,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                       {notifications.length > 0 ? (
                         notifications.slice(0, 10).map((item) => (
                           <div className={`notification-item ${!item.isRead ? "unread" : ""}`} key={item.id}>
-                            <span className="activity-system" style={{ background: "#f0f0f3", color: "#6c5edb", padding: "8px", borderRadius: "50%", display: "grid", placeItems: "center", width: "32px", height: "32px", flexShrink: 0 }}><Inbox size={15} /></span>
+                            <span className="activity-system" style={{ background: "rgba(255,255,255,0.04)", color: "#818cf8", padding: "8px", borderRadius: "50%", display: "grid", placeItems: "center", width: "32px", height: "32px", flexShrink: 0 }}><Inbox size={15} /></span>
                             <p>
                               <strong>{item.title}</strong>
                               <span style={{ display: "block", color: "#64748b", fontSize: "12px", marginTop: "3px" }}>{item.message}</span>

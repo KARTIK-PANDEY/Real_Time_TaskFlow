@@ -176,24 +176,25 @@ export default function TeamPage() {
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))", gap: "20px", marginTop: "20px" }}>
               <style jsx>{`
                 .team-card {
-                  background: rgba(20, 20, 43, 0.65) !important;
-                  border: 1px solid rgba(255, 255, 255, 0.05) !important;
-                  backdrop-filter: blur(12px) !important;
-                  border-radius: 16px;
-                  padding: 24px;
+                  background: linear-gradient(135deg, rgba(30, 41, 59, 0.45) 0%, rgba(15, 23, 42, 0.75) 100%) !important;
+                  border: 1px solid rgba(255, 255, 255, 0.06) !important;
+                  backdrop-filter: blur(16px) !important;
+                  border-radius: 20px !important;
+                  padding: 26px !important;
                   display: flex;
                   flex-direction: column;
-                  gap: 16px;
-                  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+                  gap: 20px !important;
+                  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
+                  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2) !important;
                 }
                 .team-card:hover {
-                  transform: translateY(-3px);
-                  border-color: rgba(99, 102, 241, 0.35) !important;
-                  box-shadow: 0 12px 30px rgba(99, 102, 241, 0.12) !important;
-                  background: rgba(26, 26, 56, 0.8) !important;
+                  transform: translateY(-5px) !important;
+                  border-color: rgba(129, 140, 248, 0.45) !important;
+                  box-shadow: 0 20px 40px rgba(99, 102, 241, 0.12), 0 0 1px 1px rgba(99, 102, 241, 0.15) inset !important;
+                  background: linear-gradient(135deg, rgba(30, 41, 59, 0.6) 0%, rgba(15, 23, 42, 0.9) 100%) !important;
                 }
                 .dept-badge {
-                  padding: 2px 8px;
+                  padding: 3px 9px;
                   font-size: 11px;
                   font-weight: 700;
                   border-radius: 6px;
@@ -208,7 +209,7 @@ export default function TeamPage() {
                       <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
                         <Avatar initials={employee.initials} color={employee.avatarColor} status={employee.status} size="lg" />
                         <div>
-                          <h3 style={{ fontSize: "16px", fontWeight: "700", margin: 0, color: "#ffffff" }}>{employee.name}</h3>
+                          <h3 style={{ fontSize: "16px", fontWeight: "700", margin: 0, color: "#ffffff", lineHeight: "1.3" }}>{employee.name}</h3>
                           <span style={{ fontSize: "12px", color: "#94a3b8" }}>{employee.role}</span>
                         </div>
                       </div>
@@ -221,35 +222,35 @@ export default function TeamPage() {
                     </div>
 
                     {employee.reportsToName && (
-                      <div style={{ fontSize: "12px", color: "#64748b", background: "rgba(255,255,255,0.02)", padding: "6px 12px", borderRadius: "8px", border: "1px solid rgba(255,255,255,0.03)" }}>
-                        Reports to: <strong style={{ color: "#cbd5e1" }}>{employee.reportsToName}</strong>
+                      <div style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "12px", color: "#94a3b8", background: "rgba(129, 140, 248, 0.05)", padding: "8px 14px", borderRadius: "10px", border: "1px solid rgba(129, 140, 248, 0.1)" }}>
+                        <span>Reports to:</span> <strong style={{ color: "#ffffff", fontWeight: "600" }}>{employee.reportsToName}</strong>
                       </div>
                     )}
 
-                    <div style={{ display: "flex", justifyContent: "space-between", fontSize: "13px", color: "#cbd5e1", borderTop: "1px dashed rgba(255,255,255,0.06)", paddingTop: "12px" }}>
-                      <span>Active Tasks: <strong style={{ color: "#818cf8" }}>{employee.taskCount}</strong></span>
-                      <span>Completed: <strong style={{ color: "#34d399" }}>{employee.completedCount}</strong></span>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "13px", color: "#cbd5e1", borderTop: "1px dashed rgba(255,255,255,0.06)", paddingTop: "14px" }}>
+                      <span>Active Tasks: <strong style={{ color: "#818cf8", fontWeight: "600" }}>{employee.taskCount}</strong></span>
+                      <span>Completed: <strong style={{ color: "#34d399", fontWeight: "600" }}>{employee.completedCount}</strong></span>
                     </div>
 
-                    <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-                      <div style={{ display: "flex", justifyContent: "space-between", fontSize: "12px", color: "#94a3b8" }}>
+                    <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "12px", color: "#94a3b8" }}>
                         <span>Weekly Workload</span>
-                        <strong style={{ color: employee.workload > 70 ? "#f87171" : employee.workload > 40 ? "#fbbf24" : "#34d399" }}>{employee.workload}%</strong>
+                        <strong style={{ fontWeight: "600", color: employee.workload > 70 ? "#ef4444" : employee.workload > 40 ? "#fbbf24" : "#34d399" }}>{employee.workload}%</strong>
                       </div>
                       <div style={{ height: "6px", background: "rgba(255,255,255,0.06)", borderRadius: "3px", overflow: "hidden" }}>
                         <div
                           style={{
                             height: "100%",
                             width: `${employee.workload}%`,
-                            background: employee.workload > 70 ? "#ef4444" : employee.workload > 40 ? "#fbbf24" : "#10b981",
+                            background: employee.workload > 70 ? "linear-gradient(90deg, #ef4444, #f87171)" : employee.workload > 40 ? "linear-gradient(90deg, #d97706, #fbbf24)" : "linear-gradient(90deg, #059669, #34d399)",
                             borderRadius: "3px"
                           }}
                         />
                       </div>
                     </div>
 
-                    <div style={{ fontSize: "12px", color: "#64748b", borderTop: "1px solid rgba(255,255,255,0.05)", paddingTop: "10px", marginTop: "4px" }}>
-                      Email: <span style={{ color: "#cbd5e1", fontFamily: "monospace" }}>{employee.email}</span>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "12px", color: "#64748b", borderTop: "1px solid rgba(255,255,255,0.05)", paddingTop: "12px", marginTop: "4px" }}>
+                      <span>Email:</span> <span style={{ color: "#cbd5e1", fontFamily: "monospace" }}>{employee.email}</span>
                     </div>
                   </div>
                 ))
