@@ -69,7 +69,7 @@ The real-time notifications engine implements a multi-tier connection architectu
 
 The system implements a role-based dashboard representation, separating the **Workspace Administrator** and **Standard Teammates**.
 
-| Interface Capability |       Admin       | Standard Teammates |
+| Interface Capability | Admin (`Anita Sheikh`) | Standard Teammates |
 | :--- | :---: | :---: |
 | **Workspace Metrics** | Global (Full Workspace Analytics) | Scoped (Personal Progress Only) |
 | **Task Creation** | Allowed (Create & Assign) | Restricted (Disabled) |
@@ -123,5 +123,5 @@ npx drizzle-kit push
 
 ## 👨‍💻 Author & Developed By
 
-### **KARTIK PANDEY** 
+### **KARTIK PANDEY**
 Lead Full-Stack Software Developer
