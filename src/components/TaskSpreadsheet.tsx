@@ -27,9 +27,7 @@ export default function TaskSpreadsheet({
   currentUser,
   onSaveSuccess,
 }: TaskSpreadsheetProps) {
-  const isEmployee = currentUser?.orgRole === "EMPLOYEE";
-
-  const createEmptyRow = () => ({
+  const isEmployee = currentUser?.orgRole === "EMPLOYEE"; const createEmptyRow = () => ({
     title: "",
     project: projects[0]?.name || "Internal",
     assigneeId: isEmployee ? String(currentUser.id) : String(employees[0]?.id || ""),
