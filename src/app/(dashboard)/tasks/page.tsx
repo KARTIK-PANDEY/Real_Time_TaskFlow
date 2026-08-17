@@ -2,7 +2,7 @@
 
 import { useDashboard } from "../layout";
 import { useState, useMemo } from "react";
-import { Check, CheckCircle2, CircleHelp, Pause, Play, Plus, Search, ChevronDown, CalendarDays } from "lucide-react";
+import { Check, CheckCircle2, CircleHelp, Pause, Play, Plus, Search, ChevronDown, CalendarDays, ArrowUpDown } from "lucide-react";
 import type { TaskStatus, TaskView, TaskPriority } from "@/lib/types";
 import TaskSpreadsheet from "@/components/TaskSpreadsheet";
 
@@ -177,24 +177,27 @@ function TaskRow({
   );
 }
 
+const TASK_FILTERS = [
+  { id: "all", label: "All tasks" },
+  { id: "todo", label: "To do" },
+  { id: "in_progress", label: "In progress" },
+  { id: "review", label: "Review" },
+  { id: "completed", label: "Completed" },
+];
+
+const PRIORITY_WEIGHT: Record<string, number> = { high: 3, medium: 2, low: 1 };
+
 export default function TasksPage() {
   const { data, query, setQuery, updateTaskStatus, handleTimer, timer, tick, setNewTaskOpen, user, isAdmin, refreshData } = useDashboard();
   const [filter, setFilter] = useState<string>("all");
+  const [sortBy, setSortBy] = useState<"due" | "priority" | "tracked" | "newest">("due");
   const [showAllTasks, setShowAllTasks] = useState(isAdmin);
   const [activeTab, setActiveTab] = useState<"list" | "spreadsheet">("list");
-
-  const taskFilters = [
-    { id: "all", label: "All tasks" },
-    { id: "todo", label: "To do" },
-    { id: "in_progress", label: "In progress" },
-    { id: "review", label: "Review" },
-    { id: "completed", label: "Completed" },
-  ];
 
   const filteredTasks = useMemo(() => {
     if (!data || !user) return [];
     const normalized = query.trim().toLowerCase();
-    return data.tasks.filter((task) => {
+    const list = data.tasks.filter((task) => {
       const matchesScope = showAllTasks || task.assignee.id === user.id;
       const matchesFilter = filter === "all" || task.status === filter;
       const matchesQuery =
@@ -204,7 +207,14 @@ export default function TasksPage() {
         );
       return matchesScope && matchesFilter && matchesQuery;
     });
-  }, [data, filter, query, showAllTasks, user]);
+
+    return list.sort((a, b) => {
+      if (sortBy === "due") return new Date(a.dueAt).getTime() - new Date(b.dueAt).getTime();
+      if (sortBy === "priority") return (PRIORITY_WEIGHT[b.priority] || 0) - (PRIORITY_WEIGHT[a.priority] || 0);
+      if (sortBy === "tracked") return b.trackedMinutes - a.trackedMinutes;
+      return b.id - a.id;
+    });
+  }, [data, filter, query, showAllTasks, sortBy, user]);
 
   if (!data || !user) return null;
 
@@ -273,9 +283,9 @@ export default function TasksPage() {
           />
         ) : (
           <>
-            <div className="task-toolbar" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <div className="task-toolbar" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "12px", flexWrap: "wrap" }}>
               <div className="task-filters">
-                {taskFilters.map((item) => (
+                {TASK_FILTERS.map((item) => (
                   <button
                     key={item.id}
                     className={filter === item.id ? "active" : ""}
@@ -286,32 +296,56 @@ export default function TasksPage() {
                 ))}
               </div>
 
-              {!isAdmin && (
-                <div className="teammate-scope-toggle" style={{ display: "flex", gap: "6px", background: "#f0f0f3", padding: "4px", borderRadius: "8px" }}>
-                  <style jsx>{`
-                    .scope-btn {
-                      padding: 6px 12px;
-                      border: none;
-                      border-radius: 6px;
-                      font-size: 12px;
-                      font-weight: 600;
-                      cursor: pointer;
-                      transition: all 0.2s;
-                    }
-                    .scope-btn.active {
-                      background: #6c5edb;
-                      color: white;
-                      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-                    }
-                    .scope-btn.inactive {
-                      background: transparent;
-                      color: #64748b;
-                    }
-                  `}</style>
-                  <button className={`scope-btn ${!showAllTasks ? "active" : "inactive"}`} onClick={() => setShowAllTasks(false)}>My Tasks</button>
-                  <button className={`scope-btn ${showAllTasks ? "active" : "inactive"}`} onClick={() => setShowAllTasks(true)}>All Team Tasks</button>
+              <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "6px", background: "rgba(255, 255, 255, 0.03)", border: "1px solid rgba(255, 255, 255, 0.08)", padding: "4px 8px", borderRadius: "8px", fontSize: "12px", color: "#94a3b8" }}>
+                  <ArrowUpDown size={13} style={{ color: "#818cf8" }} />
+                  <span style={{ color: "#94a3b8" }}>Sort:</span>
+                  <select
+                    value={sortBy}
+                    onChange={(e: any) => setSortBy(e.target.value)}
+                    style={{
+                      background: "transparent",
+                      border: "none",
+                      color: "#ffffff",
+                      fontSize: "12px",
+                      cursor: "pointer",
+                      outline: "none"
+                    }}
+                  >
+                    <option value="due" style={{ background: "#0f172a", color: "#ffffff" }}>Due Date</option>
+                    <option value="priority" style={{ background: "#0f172a", color: "#ffffff" }}>Priority</option>
+                    <option value="tracked" style={{ background: "#0f172a", color: "#ffffff" }}>Time Tracked</option>
+                    <option value="newest" style={{ background: "#0f172a", color: "#ffffff" }}>Recently Added</option>
+                  </select>
                 </div>
-              )}
+
+                {!isAdmin && (
+                  <div className="teammate-scope-toggle" style={{ display: "flex", gap: "4px", background: "rgba(255, 255, 255, 0.03)", border: "1px solid rgba(255, 255, 255, 0.08)", padding: "4px", borderRadius: "8px" }}>
+                    <style jsx>{`
+                      .scope-btn {
+                        padding: 6px 12px;
+                        border: none;
+                        border-radius: 6px;
+                        font-size: 12px;
+                        font-weight: 600;
+                        cursor: pointer;
+                        transition: all 0.2s;
+                      }
+                      .scope-btn.active {
+                        background: rgba(99, 102, 241, 0.25);
+                        color: #ffffff;
+                        border: 1px solid rgba(99, 102, 241, 0.4);
+                      }
+                      .scope-btn.inactive {
+                        background: transparent;
+                        color: #94a3b8;
+                      }
+                    `}</style>
+                    <button className={`scope-btn ${!showAllTasks ? "active" : "inactive"}`} onClick={() => setShowAllTasks(false)}>My Tasks</button>
+                    <button className={`scope-btn ${showAllTasks ? "active" : "inactive"}`} onClick={() => setShowAllTasks(true)}>All Team Tasks</button>
+                  </div>
+                )}
+              </div>
             </div>
             
             <div className="task-table-head">

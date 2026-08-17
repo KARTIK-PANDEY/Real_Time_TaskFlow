@@ -110,6 +110,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const [mobileNav, setMobileNav] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const searchInputRef = useRef<HTMLInputElement>(null);
 
   // User-specific notifications
   const [notifications, setNotifications] = useState<any[]>([]);
@@ -333,6 +334,38 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     }
   }, [toast]);
 
+  // Global Keyboard Shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Ctrl+K / Cmd+K -> Focus Search
+      if ((e.ctrlKey || e.metaKey) && (e.key === "k" || e.key === "K")) {
+        e.preventDefault();
+        searchInputRef.current?.focus();
+        return;
+      }
+
+      // Ctrl+N / Cmd+N -> Open New Task Modal (for Admin)
+      if ((e.ctrlKey || e.metaKey) && (e.key === "n" || e.key === "N")) {
+        if (isAdmin) {
+          e.preventDefault();
+          setNewTaskOpen(true);
+          return;
+        }
+      }
+
+      // Escape -> Close open modals
+      if (e.key === "Escape") {
+        setNewTaskOpen(false);
+        setNotificationsOpen(false);
+        setUserMenuOpen(false);
+        setMobileNav(false);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isAdmin]);
+
   // Timer Tick
   useEffect(() => {
     if (timer) {
@@ -396,6 +429,27 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       if (!res.ok) throw new Error(updated.error || "Failed to update task");
       setData(updated);
       setToast(`Task status updated to ${status.replace("_", " ")}`);
+
+      if (status === "completed") {
+        try {
+          const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = "sine";
+          osc.frequency.setValueAtTime(523.25, ctx.currentTime);
+          osc.frequency.setValueAtTime(659.25, ctx.currentTime + 0.08);
+          osc.frequency.setValueAtTime(783.99, ctx.currentTime + 0.16);
+          osc.frequency.setValueAtTime(1046.50, ctx.currentTime + 0.24);
+          gain.gain.setValueAtTime(0.08, ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.45);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start();
+          osc.stop(ctx.currentTime + 0.45);
+        } catch {
+          // Ignore audio errors
+        }
+      }
     } catch (err: any) {
       setToast(err.message || "Failed to update task status");
     }
@@ -660,6 +714,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             <div className="global-search">
               <Search size={18} />
               <input
+                ref={searchInputRef}
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder="Search tasks, projects, or people…"
